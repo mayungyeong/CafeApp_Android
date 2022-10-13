@@ -1,6 +1,7 @@
 import { React, useEffect, useState } from "react";
 import { Alert, TextInput, StyleSheet, View, ScrollView, Text, LogBox, Pressable, Button } from 'react-native';
 
+//서버 주소
 let ws = new WebSocket(`ws://10.32.14.112:8080`);
 
 function App() {
@@ -12,16 +13,17 @@ function App() {
   const [serverMessages, setServerMessages] = useState([]);
   const serverMessagesList = [];
   const [seatSelect, setSeatSelect] = useState([false, false, false, false, false, false, false, false, false]);
-  const [tables, setTables] = useState([]);;
+  const [tables, setTables] = useState([]);
 
-  var name = "마윤경";
-  var data = {};
-  var sendData = [];
+  const data = {};
+  const sendData = [];
+
+  const name = "마윤경";
   data['id'] = name;
 
   useEffect(() => {
 
-    ws.onopen = () => { // 서버가 연결 수락 시 
+    ws.onopen = () => { //서버가 연결 수락 시 
       setServerState('connected');
 
       data['req'] = 'con'; //연결
@@ -30,18 +32,18 @@ function App() {
       ws.send(jsonData);
     };
 
-    ws.onmessage = (e) => { // 서버에서 보낸 메시지 수신
+    ws.onmessage = (e) => { //서버에서 보낸 메시지 수신
       if (e.data.length !== undefined) {
         serverMessagesList.push(e.data);
         setServerMessages([...serverMessagesList]);
 
         jsonRev = JSON.parse(e.data);
         for (var i = 0; i < jsonRev.length; i++) {
-          if (jsonRev[i].req == 'res') {
+          if (jsonRev[i].req == 'res') { //예약일 때
             revSelect(jsonRev[i].tnum, true);
             tablesRes(jsonRev[i]);
           }
-          else if (jsonRev[i].req == 'can') {
+          else if (jsonRev[i].req == 'can') { //예약 취소일 때
             revSelect(jsonRev[i].tnum, false);
             tablesCan(jsonRev[i]);
           }
@@ -49,11 +51,11 @@ function App() {
       }
     };
 
-    ws.onerror = (e) => { // 오류 발생 시
+    ws.onerror = (e) => { //오류 발생 시
       setServerState('error :', e.message);
     };
 
-    ws.onclose = (e) => { // 연결 종료 시 
+    ws.onclose = (e) => { //연결 종료 시 
       setServerState('disconnected', e);
     };
 
@@ -63,6 +65,7 @@ function App() {
     };
   }, [])
 
+  //좌석 T/F 변경
   const revSelect = (id, bool) => {
     seatSelect[id] = bool;
 
@@ -79,6 +82,7 @@ function App() {
     ]);
   }
 
+  //좌석 예약
   const tablesRes = (jsonRev) => {
     tableInfo = {};
     tableInfo['tnum'] = jsonRev.tnum;
@@ -88,6 +92,7 @@ function App() {
     console.log(tables.length);
   }
 
+  //좌석 예약 취소
   const tablesCan = (jsonRev) => {
     for (var i = 0; i < tables.length; i++) {
       if (tables[i].tnum == jsonRev.tnum) {
@@ -97,20 +102,22 @@ function App() {
     }
   }
 
+  //서버에 메시지 전송
   const sendMessage = () => {
     ws.send(messageText);
     setMessageText('');
   };
 
+  //좌석 클릭 시
   const getSeat = (id) => {
     return (
       <Pressable onPress={() => {
         if (ws !== null) {
           if (seatSelect[id] == false) { //미예약 좌석일 때
-            UnreservedAlert(id);
+            ReservedAlert(id);
           }
           else { //예약한 좌석일 때
-            ReservedAlert(id);
+            UnreservedAlert(id);
           }
         }
       }}
@@ -120,7 +127,8 @@ function App() {
     )
   }
 
-  const UnreservedAlert = (id) => {
+  //예약 알림
+  const ReservedAlert = (id) => {
     Alert.alert(
       '예약',
       '정말로 예약하시겠습니까?',
@@ -145,8 +153,8 @@ function App() {
     );
   };
 
-  const ReservedAlert = (id) => {
-     
+  //예약 취소 알림
+  const UnreservedAlert = (id) => {
     Alert.alert(
       '예약 취소',
       '정말로 예약 취소하시겠습니까?',
@@ -155,9 +163,8 @@ function App() {
           text: '예',
           onPress: () => {
             for (var i = 0; i < tables.length; i++) {
-              console.log(tables.length);
               if (tables[i].tnum == id) {
-                if (tables[i].id == name) {
+                if (tables[i].id == name) { //테이블의 아이디와 이름이 같을 시
                   data['req'] = 'can';
                   data['tnum'] = id;
                   sendData.push(data);
@@ -166,8 +173,8 @@ function App() {
 
                   break;
                 }
-                else {
-                  alert("본인이 예약한 좌석이 아닙니다.🙏");
+                else { //테이블의 아이디와 이름이 다를 시
+                  alert("본인이 예약한 좌석이 아닙니다🙏");
                   break;
                 }
               }
@@ -184,6 +191,7 @@ function App() {
     );
   };
 
+  //뷰
   return (
     <View style={styles.all}>
       <View style={styles.appBar}>
@@ -232,6 +240,7 @@ function App() {
 
 };
 
+//스타일
 const styles = StyleSheet.create({
   all: {
 
@@ -255,7 +264,7 @@ const styles = StyleSheet.create({
     height: 55, width: 80, marginLeft: 10, marginTop: 37, borderRadius: 5
   },
   sendBtn: {
-    justifyContent: 'center', backgroundColor: "#DCECD2"
+    justifyContent: 'center', backgroundColor: "#DCECD2", color: "black"
   },
   getMessageArea: {
     height: 150, width: 340, marginLeft: 17, marginTop: 100, padding: 15, borderRadius: 5, backgroundColor: "#DCECD2"

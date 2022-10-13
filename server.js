@@ -4,7 +4,7 @@ var WebSocketServer = require('ws').Server,
     tables = [];
    
 wss.on('connection', function(ws) {
-   // CLIENTS.push(ws);
+
     ws.on('message', function(message) {
         console.log('received: %s', message); 
         var jsonData = JSON.parse(message);        
@@ -25,9 +25,9 @@ wss.on('connection', function(ws) {
             sendAll(message);
         }
         else if(jsonData[0].req == 'can'){ //취소
-            for (var i=0; i<tables.length; i++) {
+            for (var i = 0; i < tables.length; i++) {
                 if(tables[i].tnum == jsonData[0].tnum){
-                        tables.splice(i,1);
+                        tables.splice(i, 1);
                         break;
                 }
             }
@@ -37,14 +37,16 @@ wss.on('connection', function(ws) {
             sendAll(message);
         }
     });
-    //ws.send("NEW USER JOINED");
 });
+
 function sendAll (message) {
     for (var i=0; i<CLIENTS.length; i++) {
         console.log(CLIENTS[i].id);
-        CLIENTS[i].send("" + message);
+        CLIENTS[i].send("" + message); //문자열로 변경
     }
 }
+
+/*
 function send(message,id) {
     for (var i=0; i<CLIENTS.length; i++) {
          if(CLIENTS[i].id == id){
@@ -53,3 +55,4 @@ function send(message,id) {
          }
     }
 }
+*/
