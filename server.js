@@ -10,13 +10,13 @@ wss.on('connection', function(ws) {
         var jsonData = JSON.parse(message);        
         console.log(jsonData[0].req);
 
-        if(jsonData[0].req == 'con'){
+        if(jsonData[0].req == 'con'){ //연결
             ws.id = jsonData[0].id; 
             CLIENTS.push(ws);
             ws.send(JSON.stringify(tables));
             sendAll(message);
         }
-        else if(jsonData[0].req == 'res'){
+        else if(jsonData[0].req == 'res'){ //예약
             tableInfo= {};
             tableInfo['tnum'] = jsonData[0].tnum;
             tableInfo['id'] = jsonData[0].id;
@@ -24,7 +24,7 @@ wss.on('connection', function(ws) {
             tables.push(tableInfo);
             sendAll(message);
         }
-        else if(jsonData[0].req == 'can'){
+        else if(jsonData[0].req == 'can'){ //취소
             for (var i=0; i<tables.length; i++) {
                 if(tables[i].tnum == jsonData[0].tnum){
                         tables.splice(i,1);

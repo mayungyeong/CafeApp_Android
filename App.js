@@ -12,6 +12,7 @@ function App() {
   const [serverMessages, setServerMessages] = useState([]);
   const serverMessagesList = [];
   const [seatSelect, setSeatSelect] = useState([false, false, false, false, false, false, false, false, false]);
+  const [tables, setTables] = useState([]);;
 
   var name = "마윤경";
   var data = {};
@@ -22,7 +23,7 @@ function App() {
 
     ws.onopen = () => { // 서버가 연결 수락 시 
       setServerState('connected');
-      
+
       data['req'] = 'con'; //연결
       sendData.push(data);
       var jsonData = JSON.stringify(sendData);
@@ -34,19 +35,15 @@ function App() {
         serverMessagesList.push(e.data);
         setServerMessages([...serverMessagesList]);
 
-        // seatnum = e.data.match(/\d+/g);
-        // console.log("좌석번호: " + seatnum);
-
-        // seatidx = seatnum - 1;
-        // revSelect(seatidx);
-
         jsonRev = JSON.parse(e.data);
         for (var i = 0; i < jsonRev.length; i++) {
           if (jsonRev[i].req == 'res') {
             revSelect(jsonRev[i].tnum, true);
-          } 
+            tablesRes(jsonRev[i]);
+          }
           else if (jsonRev[i].req == 'can') {
             revSelect(jsonRev[i].tnum, false);
+            tablesCan(jsonRev[i]);
           }
         }
       }
@@ -67,7 +64,6 @@ function App() {
   }, [])
 
   const revSelect = (id, bool) => {
-    // seatSelect[id] = !seatSelect[id]
     seatSelect[id] = bool;
 
     setSeatSelect([
@@ -81,6 +77,24 @@ function App() {
       seatSelect[7],
       seatSelect[8],
     ]);
+  }
+
+  const tablesRes = (jsonRev) => {
+    tableInfo = {};
+    tableInfo['tnum'] = jsonRev.tnum;
+    tableInfo['id'] = jsonRev.id;
+    tableInfo['req'] = jsonRev.req;
+    tables.push(tableInfo);
+    console.log(tables.length);
+  }
+
+  const tablesCan = (jsonRev) => {
+    for (var i = 0; i < tables.length; i++) {
+      if (tables[i].tnum == jsonRev.tnum) {
+        tables.splice(i, 1);
+        break;
+      }
+    }
   }
 
   const sendMessage = () => {
@@ -114,9 +128,6 @@ function App() {
         {
           text: '예',
           onPress: () => {
-            // seatnum = (id + 1).toString();
-            // ws.send("mmyg: " + seatnum + "번 좌석 예약 완료");
-
             data['req'] = 'res';
             data['tnum'] = id;
             sendData.push(data);
@@ -135,6 +146,7 @@ function App() {
   };
 
   const ReservedAlert = (id) => {
+     
     Alert.alert(
       '예약 취소',
       '정말로 예약 취소하시겠습니까?',
@@ -142,17 +154,23 @@ function App() {
         {
           text: '예',
           onPress: () => {
-            if (true) { // 본인일 때
-              // ws.send("mmyg: " + seatnum + "번 좌석 예약 취소");
+            for (var i = 0; i < tables.length; i++) {
+              console.log(tables.length);
+              if (tables[i].tnum == id) {
+                if (tables[i].id == name) {
+                  data['req'] = 'can';
+                  data['tnum'] = id;
+                  sendData.push(data);
+                  var jsonData = JSON.stringify(sendData);
+                  ws.send(jsonData);
 
-              data['req'] = 'can';
-              data['tnum'] = id;
-              sendData.push(data);
-              var jsonData = JSON.stringify(sendData);
-              ws.send(jsonData);
-            }
-            else { // 본인 아닐 때
-              alert("이미 예약된 좌석입니다🙏");
+                  break;
+                }
+                else {
+                  alert("본인이 예약한 좌석이 아닙니다.🙏");
+                  break;
+                }
+              }
             }
           },
           style: 'destructive',
