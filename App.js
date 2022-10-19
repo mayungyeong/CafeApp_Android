@@ -2,7 +2,7 @@ import { React, useEffect, useState } from "react";
 import { Alert, TextInput, StyleSheet, View, ScrollView, Text, LogBox, Pressable, Button } from 'react-native';
 
 //서버 주소
-let ws = new WebSocket(`ws://10.32.14.112:8080`);
+let ws = new WebSocket(`ws://10.32.14.26:8080`);
 
 function App() {
 
@@ -14,6 +14,7 @@ function App() {
   const serverMessagesList = [];
   const [seatSelect, setSeatSelect] = useState([false, false, false, false, false, false, false, false, false]);
   const [tables, setTables] = useState([]);
+  //const [btnText, setBtnText] = useState([''],[''],[''],[''],[''],[''],[''],[''],['']);
 
   const data = {};
   const sendData = [];
@@ -42,10 +43,25 @@ function App() {
           if (jsonRev[i].req == 'res') { //예약일 때
             revSelect(jsonRev[i].tnum, true);
             tablesRes(jsonRev[i]);
+            serverMessagesList.push(
+              jsonRev[i].id +
+              '님이 ' +
+              jsonRev[i].tnum +
+              '번째 테이블 ' +
+              '예약',
+            );
+            setServerMessages([...serverMessagesList]);
           }
           else if (jsonRev[i].req == 'can') { //예약 취소일 때
             revSelect(jsonRev[i].tnum, false);
             tablesCan(jsonRev[i]);
+            serverMessagesList.push(
+              jsonRev[i].id +
+              '님이 ' +
+              jsonRev[i].tnum +
+              '번째 테이블 ' +
+              '예약 취소',
+            );
           }
         }
       }
@@ -210,7 +226,7 @@ function App() {
         {
           serverMessages.map((item, id) => {
             return (
-              <Text key={id}>{item}</Text>
+              <Text key={id}>{item}{"\n"}</Text>
             )
           })
         }
